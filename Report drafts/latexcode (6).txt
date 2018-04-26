@@ -33,16 +33,20 @@
 \begin{document}
 	
 	\maketitle
+    Abstract: In this study, done in the Almgren-Chriss framework, we focused on testing the impacts of using different trading benchmarks (IS, VWAP and TWAP) on the trading trajectory and the efficient frontier. We found out that the impact of risk aversion is the highest on the IS benchmark and while smaller on TWAP and VWAP. We also found out that using different volatility measures does not impact the trading trajectories.
+    
 	\section{Introduction}
 	
-	What is the optimal pace to build or unwind a position? What is the optimal trade-off between a fast (but costly) execution and a slow execution (less costly but susceptible to timing risk). Issues related to the optimal execution of trading positions have long been faced by traders, marker makers and brokers, but have long been relatively ignored by statisticians, economists and econophysicists in past decades.
+	What is the optimal pace to build or unwind a position? What is the optimal trade-off between a fast (but costly) execution and a slow execution (less costly but susceptible to timing risk)? Issues related to the optimal execution of trading positions have long been faced by traders, marker makers and brokers, but have long been relatively ignored by statisticians, economists and econophysicists.
 	
-	In this regard, Bertsimas and Lo (1998) [1] and Almgren and Chriss (2001) [2] represent one of first forays into optimal execution. More specifically, Almgren-Chriss take into account the risk that the execution price would move over the course of the liquidation. For example, an algorithm executing with high execution speed is more costly because of limited liquidity, but a slower execution speed exposes the trader to (unexpected) price fluctuations. Their main result is that under a set of assumptions on price trajectory and market impact, there exists an optimal trade-off between execution costs and timing risk.
+	In this regard, Bertsimas and Lo (1998) [1] and Almgren and Chriss (2001) [2] represent the first forays into research on optimal execution. More specifically, Almgren-Chriss take into account the risk that the execution price would move over the course of the liquidation. For example, an algorithm executing with high liquidation speed is more costly because of limited liquidity, but a slower execution speed exposes the trader to (unexpected) price fluctuations. Their main result is that under a set of assumptions on price trajectory and market impact, there exists an optimal trade-off between execution costs and timing risk.
 	
-	Almgren and Chriss (2001) thus became the canonical model for optimal execution research, and have seen a number of extensions with more mathematically intensive implementations (stochastic control, reinforcement learning), more realistic model assumptions (dynamic parameters, market impact estimation) and multi-asset.
+	Almgren and Chriss (2001) thus became the canonical model for optimal execution research, and have seen a number of extensions with more mathematically intensive implementations (such as but not limited to stochastic control, dynamic programming and reinforcement learning), more realistic model assumptions (dynamic parameters, market impact estimation) and multi-asset investment universes.
 	
-	In this paper, we will focus on the Almgren-Chriss framework (in discrete-time) and volatility estimation:
+	In this paper, we will focus on the Almgren-Chriss framework (in discrete-time) and volatility estimation, gravitating around the three following topics:
 	
+    \vspace{3mm}
+    
 	\begin{itemize}
 		\item Solving Almgren-Chriss framework with nonlinear programming (original method used by the authors)
 		\item Solving Almgren-Chriss framework with dynamic programming
@@ -55,15 +59,15 @@
 	
 	$$ x_k = X - \sum_{j=1}^k n_j $$
 	
-	The trader is faced with the execution costs. The framework considers market impact to be the most important component of transaction costs. Yet they are difficult to measure, as it might depend on the trading volume and the chosen strategy. There are 2 flavours of market impact: temporary impact modelled by a function $v\rightarrow h(v)$ (i.e. disequilibrium between supply and demand when an order is executed) and permanent impact $v\rightarrow g(v)$ (i.e. the trader is leaking information to other traders).
+	The trader is faced with execution costs. In this regard, the framework considers market impact to be the most important component of transaction costs. Yet they are difficult to measure, as it might depend on the trading volume and the chosen strategy. There are 2 types of market impact: temporary impact modeled by a function $v\rightarrow h(v)$ (i.e. disequilibrium between supply and demand when an order is executed) and permanent impact $v\rightarrow g(v)$ (i.e. the trader is leaking information to other traders):
 	
 	$$ g(v) = \gamma v ^ {\alpha} $$
 	
 	$$ h(v) = \varepsilon \, \mathrm{sign}(v) + \eta \Big(\frac{v}{\tau}\Big) ^ {\beta} $$
 	
-	Since we cannot estimate both permanent and temporary impact functions, we need to make assumptions on the structure of both functions. Almgren and al. (2005) [3] through empirical evidence indicate that the temporary impact function should be concave, where $0<\beta<1$. The authors choose $\beta=0.5$. For permanent impact, take $\alpha=1$ for practical simplification, to make the model free of arbitrage and have permanent impact independent of trading (cf. Gueant, 2016). For our part, we choose the linear market impact functions: $\alpha=1$ and $\beta=1$.
+	Since we cannot estimate both permanent and temporary impact functions, we need to make assumptions on the structure of both functions. Almgren and al. (2005) [3] through empirical evidence indicate that the temporary impact function should be concave, where $0<\beta<1$ (the authors choose $\beta=0.5$). For permanent impact, they take $\alpha=1$ in order to make the model free of arbitrage and have permanent impact independent of trading (cf. Gueant, 2016 [4]). For our part, we choose linear market impact functions: $\alpha=1$ and $\beta=1$.
 	
-	For the stock price $(S_t)_{t>0}$, the authors choose Arithmetic Brownian Motion (ABM) is that the optimal strategy will be dynamically optimal. If we chose the Geometric Brownian Motion (GBM), the optimal strategy would be path-dependent as it would be dependent on past historical price movements.
+For the stock price $(S_t)_{t>0}$, the authors choose arithmetic Brownian motion in order to ensure that the optimal strategy will be dynamically optimal. If we chose the geometric Brownian motion, the optimal strategy would have been path-dependent as it would be dependent on past historical price movements.
 	
 	$$ S_k = S_{k-1} + \sigma \sqrt{\tau} \zeta_k - \tau g(\frac{n_k}{\tau}) $$
 	$$ S_k = S_0 + \sigma \sum_{j=1}^k \sqrt{\tau} \zeta_j - \gamma (X - x_k) $$
@@ -72,9 +76,9 @@
 	With those assumptions, we can now model the goal of the trader. In the case of our paper, we will only focus on the following three algorithms:
 	
 	\begin{itemize}
-		\item \textbf{Implementation shortfall}: it is a pure cost-driven algorithm that looks to minimize the difference between the average execution price that is actually achieved and a benchmark. The aim is to achieve an average execution price that minimises the shortfall when compared with the decision price. The key is to strike the right balance between market impact and timing risk. Often, this means the algorithms tend to take only as long as is necessary to prevent significant market impact.
-		\item \textbf{Volume Weighted Average Price}: average price that take into account the traded volume during a time period. It is calculated as the traded value divided by the trade volume. It is classified as an impact-driven algorithm (i.e. slicing larger orders into smaller child orders in order to lower market impact costs).
-		\item \textbf{Time Weighted Average Price}: strategies here look to track the TWAP benchmark of the day. The average price that take into account the time evolution of prices during the day. It is a natural extension of order slicing strategies. It has a uniform time-based schedule. A TWAP trade buys or sells uniformly part of the volume in the first and second half of the day. It is also classified as an impact-driven algorithm.
+		\item \textbf{Implementation shortfall}: it is a pure cost-driven algorithm that looks to minimize the difference between the average execution price that is actually achieved and a benchmark. The aim is to achieve an average execution price that minimizes the shortfall when compared with the decision price. The key is to strike the right balance between market impact and timing risk. Often, this means the algorithms tend to take only as long as it is necessary to prevent significant market impact.
+		\item \textbf{Volume Weighted Average Price}: average price that takes into account the traded volume during a time period. It is calculated as the traded value divided by the trade volume. It is classified as an impact-driven algorithm (i.e. slicing larger orders into smaller child orders in order to lower market impact costs).
+		\item \textbf{Time Weighted Average Price}: average price that takes into account the time evolution of prices during the day. It is a natural extension of order slicing strategies. It has a uniform time-based schedule. A TWAP trade buys or sells uniformly part of the volume in the first and second half of the day. It is also classified as an impact-driven algorithm.
 	\end{itemize}
 	
 	For a given benchmark $B$ we define the market impact as:
@@ -85,11 +89,11 @@
 	
 	where $X$ is the size of the inventory we want to trade. A rational trader would look to minimize the expected cost $\mathbb{E}(n)$ for a given level of timing risk $\mathbb{V}(n)$ and would rationally favor a strategy $n^*=(n_1^*,...,n_N^*)$ with the lowest variance for a given level of expected transaction costs.
 	
-	We are going to use the Constant Absolute Risk Aversion (CARA) utility function, with the $\gamma$ risk aversion coefficient. While there is no \textit{a priori} reason for choosing the CARA utility function, it is mathematically convenient as it is equivalent to a mean-variance framework:
+	We are going to use the Constant Absolute Risk Aversion (CARA) utility function, with a $\gamma$ risk aversion coefficient. While there is no \textit{a priori} reason for choosing the CARA utility function, it is mathematically convenient as it is equivalent to a mean-variance framework:
 	
 	$$\min_n = \mathbb{E}(e^{\gamma X_B}) = \mathbb{E}\Big[e^{\gamma(XB-\sum_{k=1}^nn_k\tilde{S_k})}\Big] $$
 	
-	The advantage of using the expectation of an exponential is that every time we want to solve a mean-variance problem, we can transform the problem into minimizing an expectation. Thus, it allows us to directly apply methods such as nonlinear programming, stochastic control, dynamic programming and reinforcement learning algorithms.
+	The advantage of using the expectation of an exponential is that every time we want to solve a mean-variance problem, we can transform the problem into minimizing an expectation. Thus, it allows us to directly apply a wide variety of approaches, such as nonlinear programming, stochastic control, dynamic programming and reinforcement learning. Thus:
 	
 	$$\min_n \, e^{\gamma\mathbb{E}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big)+\frac{\gamma}{2}\mathbb{V}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big)}$$
 	
@@ -97,12 +101,12 @@
 	
 	$$\min_n \, \mathbb{E}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big)+\lambda\mathbb{V}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big) $$
 	
-	where $\lambda$ is the risk aversion coefficient (where $\lambda=\frac{\gamma}{2}$). We can thus create optimal strategies by solving the following a constrained optimization problem with a strictly convex objective function which will yield a unique solution.
+	where $\lambda$ is also used to model risk aversion (with $\lambda=\frac{\gamma}{2}$). We can thus create optimal strategies by solving a constrained optimization problem with a strictly convex objective function which will yield a unique solution.
 	
 	In the context of our paper, we will only focus on the following 2 models:
 	
 	\begin{itemize}
-		\item \textbf{Nonlinear programming}: an optimization method that looks to maximize (or minimize) a nonlinear objective functions with equality and inequality constrants. This was the original method used by Almgren-Chriss (2001).
+		\item \textbf{Nonlinear programming}: an optimization method that looks to maximize (or minimize) nonlinear objective functions with equality and inequality constraints. This was the original method used by Almgren-Chriss (2001).
 		\item \textbf{Dynamic programming}: an optimization method that breaks down a complex problem into smaller and simpler subproblems which are then put back together. This method is often used as a starting point for more advanced implementations using either stochastic control (ex. Hamilton-Jacobi-Bellman equation) or reinforcement learning (ex. Q-Learning).
 	\end{itemize}
 	
@@ -110,7 +114,7 @@
 	
 	\subsection{Nonlinear optimization}
 	
-	For determining the optimal liquidation we will use \textbf{sequential quadratic programming} (SLSQP), an iterative nonlinear optimization method available in the optimization libraries of the `Scipy` Python packge. This problem is modelled as followed:
+	For determining the optimal liquidation we will use \textbf{sequential quadratic programming} (SLSQP), an iterative nonlinear optimization method available in the optimization libraries of the `Scipy` Python package. This problem is modeled as followed:
 	
 	$$ \min_x \,\, f(x) $$
 	
@@ -130,7 +134,7 @@
 	
 	$$ s.t. \,\,\,\,\,\,\, h_j(x_k) + \nabla h_j(x_k)^T d = 0 $$
 	
-	Convergence to the optimal solution is dependent on the Hessian of the Lagrangian $H_L(x_k, \lambda_k, \nu_k)$ and smoothness/convexity of the objective functions. Thus we thus apply the SLSQP optimization algorithm on:
+	Convergence to the optimal solution is dependent on the Hessian of the Lagrangian $H_L(x_k, \lambda_k, \nu_k)$ and smoothness/convexity of the objective functions. Thus, we thus apply the SLSQP optimization algorithm on:
 	
 	$$\min_n \, \mathbb{E}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big)+\lambda\mathbb{V}\big(XB-\sum_{k=1}^nn_k\tilde{S_k}\big) $$
 	
@@ -183,12 +187,12 @@
 	\end{aligned}
 	\end{equation}
 	
-	% \begin{equation}
-	% \begin{aligned}
-	% \mathbb{V}[P] &= \mathbb{V}\Big[\sum_{k=1}^n \frac{X\tau}{T}(S_0+\sigma\sqrt{\tau}\sum_{j=1}^k\zeta_j-\sum_{j=1}^k\tau g(\frac{n_j}{\tau}))- n_k(S_0+\sigma\sqrt{\tau}\sum_{j=1}^{k-1}\zeta_j-\sum_{j=1}^{k-1}\tau g(\frac{n_j}{\tau})-h(\frac{n_k}{\tau}))\Big]
-	% \\&=\sum_{k=}^n(\frac{X\tau}{T}\sigma^2\tau^2)
-	% \end{aligned}
-	% \end{equation}
+	\begin{equation}
+	\begin{aligned}
+	\mathbb{V}[P] &= \mathbb{V}\Big[\sum_{k=1}^n \frac{X\tau}{T}(S_0+\sigma\sqrt{\tau}\sum_{j=1}^k\zeta_j-\sum_{j=1}^k\tau g(\frac{n_j}{\tau}))- n_k(S_0+\sigma\sqrt{\tau}\sum_{j=1}^{k-1}\zeta_j-\sum_{j=1}^{k-1}\tau g(\frac{n_j}{\tau})-h(\frac{n_k}{\tau}))\Big]
+	\\&=\sum_{k=}^n(\frac{X\tau}{T}\sigma^2\tau^2)
+	\end{aligned}
+	\end{equation}
 	
 	To compute the Variance of the market impact we need the covariance terms so we can use the following simplification.
 	
@@ -266,7 +270,7 @@
 	
 	\subsection{Results}
 
-We implemented in Python the nonlinear optimization problem we outlined in the previous sections. For our choice of parameters, we follow the original implementation by Almgren-Chriss (2001) by selecting the following parameters:
+We implemented in Python the nonlinear optimization problem we outlined in the previous sections. For our choice of parameters, we follow the original implementation by Almgren-Chriss (2001) by selecting the following values:
 
 \begin{itemize}
 \item Initial holdings: $X=40000$
@@ -314,9 +318,9 @@ For each benchmark we look at the impact of the risk aversion coefficient $\lamb
 
 We see that for the TWAP and VWAP, the trading trajectories don't seem to be as sensitive as Implementation Shortfall to the choice of risk aversion coefficient.
 
-But we do notice that the relationship between risk aversion and the liquidation trajectory invert when going from the VWAP/TWAP to Implementation Shortfall. In the case of latter, a high risk aversion leads to a very fast liquidate of the inventory while with a small one we wait longer before liquidating the inventory, which is in line with what one can expect. But for the former, we get the opposite scenario: the risk-averse agent will adopt a wait-and-see approach while the risk-taking agent will liquidate at a much faster rate. One possible explanation is that the risk averse agent is waiting for the stock price to converge towards the benchmark VWAP/TWAP over the course of the liquidation process.
+But we do notice that the relationship between risk aversion and the liquidation trajectory invert when going from the VWAP/TWAP to Implementation Shortfall. In the case of the latter, a high risk aversion leads to a very fast liquidation of the inventory while with a small one we wait longer before liquidating the inventory, which is in line with what one can expect. But for the former, we get the opposite scenario: the risk-averse agent will adopt a wait-and-see approach while the risk-taking agent will liquidate at a much faster pace. One possible explanation is that the risk averse agent is waiting for the stock price to converge towards the benchmark VWAP/TWAP over the course of the liquidation process.
 
-One thing to notice is that the trajectories for VWAP and TWAP are identical. This is confirmed by O. Gueant (2016) [4] who states both VWAP and TWAP coincide with each other in the case of a flat market volume, which is the case with our implementation.
+One thing to notice is that the trajectories for VWAP and TWAP are identical. This is confirmed by O. Gueant (2016) [4] who states that both VWAP and TWAP coincide with each other in the case of a flat market volume, which is the case with our implementation.
 
 Compared to the existing literature, the trajectories seem to be in line with the results from Almgren-Chriss (2001) [2] in the case of implementation shortfall. The VWAP/TWAP trajectories seem to be in line with the trading curve found in Gueant (2016) [4].
 
@@ -348,6 +352,8 @@ Now let us compare the efficient frontiers for each benchmark:
 \vspace{5mm}
 
 These results seem to confirm that our utility functions and optimization procedures are capable of yielding a (convex) efficient frontier of optimal liquidation strategies that provide a level of timing risk $\mathbb{V}(x)$ for a given level of expected transaction cost $\mathbb{E}(x)$.
+
+Also, depending on the trader's risk aversion it might be better to use either VWAP (on the left part of the graph as it has the steepest frontier for the left part) either IS (on the right part of the graph).
 
 We do observe a strange feature on these curves: on the right, the frontier is up for the VWAP and the TWAP benchmarks, thus yielding to non optimal choices. For the IS benchmark, we do not observe this.
 
@@ -381,11 +387,15 @@ This yields the following efficient frontiers:
    \includegraphics[width=12cm,scale=0.5]{market_impact_tests.png}\label{Fig2}
    \\ \title{Figure 7: VWAP efficient frontiers and market impact power coefficients $\alpha$, $\beta$}
   \end{center}
+The efficient frontiers using a low $\beta$, ie a low temporary market impact (in green and red) are much more spread out than the one using a high $\beta$.
+
 
 	\section{Solving Almgren-Chriss through dynamic programming}
 
 	\subsection{Dynamic programming and the Bellman equation}
 	
+    \textit{Note: we will limit the Almgren-Chriss implementation here to implementation shortfall, since we were unable to formulate Bellman equations for VWAP and TWAP.}
+    
 	What are the justifications for using dynamic programming to solve the Almgren-Chriss framework? According to D. Silver [5], dynamic programming can be used in problems that satisfy the following 2 properties:
 	
     \vspace{2mm}
@@ -397,13 +407,13 @@ This yields the following efficient frontiers:
 	
     \vspace{2mm}
     
-	One field dynamic programming can be used for is the solving of Markov decision processes (MDP), which is for a given set of states, a Markov chain with rewards (gain, loss) for each potential state and action (compared to the simple Markov chain, the agent in this setting has more control over his decision making). More importantly, the MDP has a state-value function and a action-value function which both respectively tell how is it to be in a particular state and to take a particular action (this state value function is known as the Bellman equation). Dynamic programming will look to find best policy (i.e. a set of actions to take), 
+	One field dynamic programming can be used for is the solving of Markov decision processes (MDP), which is for a given set of states, a Markov chain with rewards (gain, loss) for each potential state and action (compared to the simple Markov chain, the agent in this setting has more control over his decision making). More importantly, the MDP has a state-value function and an action-value function which both respectively tell how is it to be in a particular state and to take a particular action (this state value function is known as the Bellman equation). Dynamic programming will look to find best policy (i.e. a set of actions to take) among the set of all possible policies, the one that will maximize/minimize the value function.
 	
-	This effectively applies for the Almgren-Chriss optimal execution framework, which can be modeled as a Markov decision process: both optimal substructure (the objective of optimal liquidation at the lowest cost can be broken down into multiple trading periods) and overlapping sub-problems are applicable here (the same issues of portfolio liquidation recur for each trading period and a value function can evaluate how well the liquidation is going). We also know that the Almgren-Chriss by definition terminates (no issue of infinite MDPs) and the final rewards (i.e. the cost of liquidation) are known at the end. This makes dynamic programming a suitable technique for solving Almgren-Chriss.
+	This effectively applies for the Almgren-Chriss optimal execution framework, which can be modeled as a Markov decision process: both optimal substructure (i.e. the objective of optimal liquidation at the lowest cost can be broken down into multiple trading periods) and overlapping sub-problems are applicable here (since the same issues of portfolio liquidation recur for each trading period and a value function can evaluate how well the liquidation is going). We also know that the Almgren-Chriss by definition terminates (no issue of infinite MDPs) and the final rewards (i.e. the cost of liquidation) are known at the end. This makes dynamic programming a suitable technique for solving Almgren-Chriss.
 	
-	\textit{Note: compared to reinforcement learning algorithms (ex. temporal difference and Monte Carlo methods) which are model-free, dynamic programming assumes that the agent has full knowledge of the MDP, and thus can be used for finding the best policy (control problem).}
+	\textit{Note: compared to reinforcement learning algorithms (ex. temporal difference and Monte Carlo methods) which are model-free, dynamic programming assumes that the agent has full knowledge of the MDP and its internal transition probabilities between different states, which can then be used for finding the best policy (control problem).}
 	
-	Now that we have managed to justify the use of dynamic programming with the Almgren-Chriss framework, how do we translate this into a model that can be implemented? The core principle of this approach is first to transition from the mean-variance problem (used in nonlinear programming) into the Bellman equation (used in dynamic programming).
+	Now that we have justified the use of dynamic programming with the Almgren-Chriss framework, how do we translate this into a model that can be implemented? The core principle of this approach is first to transition from the mean-variance problem (used in nonlinear programming) into the Bellman equation (used in dynamic programming).
 	
 	Consider that the market impact benchmark $X_B=XB-\sum_{k=1}^nn_k\tilde{S_k}$ is a Gaussian random variable. If we still use the CARA utility function, we have:
 	
@@ -437,7 +447,7 @@ This yields the following efficient frontiers:
 	
 	$$ x^* = x - n $$
 	
-	Implementing this Bellman equation however is fraught with difficulties. Since stock prices $s$ can take many different values, so thus the revenue $r$ and inventory $x$. Any combination $(x,t)$ (which can be modelled as a 2$\times$2 matrix) can take any value for the stock price $s$. Similarly the tensor $(x,t,s)$ can take any possible value for the revenue $r$, thus creating a tensor $(x,t,s,r)$. Thus, the previous implementation suffers from the curse of dimensionality, and solving Almgren-Chriss with these sets of equations will become a computational nightmare (especially since our updates are synchronous and do full sweeps). An illustration of the curse of dimensionality is provided in the following figure:
+	Implementing this Bellman equation however is fraught with difficulties. Since stock prices $s$ can take many different values, so thus the revenue $r$ and inventory $x$. Any combination $(x,t)$ (which can be modelled as a 2$\times$2 matrix) can take any value for the stock price $s$. Similarly the tensor $(x,t,s)$ can take any possible value for the revenue $r$, thus creating a tensor $(x,t,s,r)$. Therefore, this implementation suffers from the curse of dimensionality, and solving Almgren-Chriss with these sets of equations will become a computational nightmare (especially since our updates are synchronous and do full sweeps). An illustration of the curse of dimensionality is provided in the following figure:
     
 	\vspace{5mm}
     
@@ -472,7 +482,7 @@ This yields the following efficient frontiers:
 	
 	\subsection{Results}
     
-    We run an implementation in Python of the Bellman equation $u(x,t)$, available on GitHub.
+    We run an implementation in Python of the Bellman equation $u(x,t)$.
     
     \subsubsection{Simulations}
     
@@ -527,7 +537,7 @@ This yields the following efficient frontiers:
     
     \subsubsection{The issue of the inventory size $X$}
     
-    Evaluating the dynamic programming framework in the context of the Almgren-Chriss model is fraught with numerous challenges. The first challenge is that while the change of variable has made the implementation of the Bellman principle more manageable, it is still  computationally expensive. As an illustration, we attempted to run our Python implementation of Bellman's equation on an initial inventory of $X=40000$ shares since we used the same amount for our nonlinear programming implementations. The implementation lasted six hours. This is the reason why we decided to only implement the code on inventories of $X=500$ shares.
+    While the change of variable has made the implementation of the Bellman principle more manageable, it is still  computationally expensive. As an illustration, we attempted to run our Python implementation of Bellman's equation on an initial inventory of $X=40000$ shares since we used the same amount for our nonlinear programming implementations. The implementation lasted six hours. This is the reason why we decided to only implement the code on inventories of $X=500$ shares.
     
     But does the size of the initial inventory $X$ play a role in the liquidation? We decide to run the same simulations again, this time with double the initial inventory amount ($X=1000$ shares):
     
@@ -548,7 +558,7 @@ This yields the following efficient frontiers:
     
     \vspace{5mm}
     
-    These simulations seem to show that for smaller values of $\gamma$ and $\eta$, the liquidation curves are more robust to changes in $X$. They won't give us a definite answer of what set of parameters will choose if we decide to run the Bellman equation on $X=40000$. But at the very least they do give us a hint of how the liquidation curves behave when $X$ is increased.
+    These simulations seem to show that for smaller values of $\gamma$ and $\eta$, the liquidation curves are more robust to changes in $X$. They won't give us a definite answer over the set of parameters $\gamma$,$\eta$ or $\phi$ we are supposed to use should we decide to run the Bellman equation with $X=40000$. But at the very least they do give us a hint of how the liquidation curves behave when $X$ is increased.
     
         \subsubsection{Comparison between dynamic and nonlinear programming}
 
@@ -567,11 +577,11 @@ We implemented both approaches with a very similar set of parameters:
 
      The comparison between both approaches is difficult due to the fact that we are not dealing with the same initial inventory $X$ (500 for dynamic against 40000 for nonlinear) and we had to rely on brute force to find suitable parameters that yielded realistic liquidation curves (in the case of dynamic programming).
      
-     It is clear that the choice between nonlinear optimization and dynamic programming shouldn't be based on idea that both are mutually exclusive. The motivations between both approaches are different:
+     It is clear that the choice between nonlinear optimization and dynamic programming shouldn't be based on the idea that both approaches are mutually exclusive. The motivations and purposes for both methods differ:
      
     \begin{itemize}
-    \item Dynamic programming: more realistic modeling of how portfolio liquidation works, possibility of integrating dynamic parameters (volatility), promising research venues (reinforcement learning). Difficulties: computational difficulties. [AAA]
-    \item Nonlinear programming: quicker, allows for. Difficulties: limited framework. [AAA]
+    \item Dynamic programming: it allows us to model more realistically how portfolio liquidation works, integrate dynamic parameters (volatility) more seamlessly and has many promising research venues (especially with the rising popularity of reinforcement learning). Dynamic programming however is very limited by the curse of dimensionality and we encountered computational difficulties.
+    \item Nonlinear programming: it is much faster than the dynamic programming approach and allows for \textit{ceteris paribus}-type comparative static analysis through the shifting parameters (all things considered equal) in order to assess their impact. It is however limited in scope.
 	\end{itemize}
     
 	\section{Volatility estimation, microstructure biases and Almgren-Chriss}
@@ -592,11 +602,11 @@ We implemented both approaches with a very similar set of parameters:
 	
 	$$ Y_{t} = X_{t} + \varepsilon_{t} $$
 	
-	where $X_t$ is a latent variable for the unobserved (but "real" stock prices), $Y_t$ our best estimation of the latent returns and $\varepsilon_{t}$ some microstructure noise such that they not by nature embedded in the dynamics of the stock price.
+	where $X_t$ is a latent variable for the unobserved (but "real" stock prices), $Y_t$ our best estimation of the latent returns and $\varepsilon_{t}$ some microstructure noise such that they are not by nature embedded in the dynamics of the stock price.
 	
 	In their paper, Zhang, Mykland and Ait-Sahalia offer 5 volatility estimators to implement: the naive estimator, the naive estimator sampled to lower frequencies, an estimator with its optimal frequency estimated through least squared regression, an estimator that takes the average of subsampled estimators and the same previous estimator minus a correction (here the naive estimator).
 	
-	We will focus on their "first-best approach", the average of subsampled estimators corrected by the naïve estimator. We start by computing the naive estimator:
+	We will focus on their "first-best approach", the average of subsampled estimators corrected by the naive estimator. We start by computing the naive estimator:
 	
 	$$ [Y,Y]_T^{(all)} = \sum_{i=1}^N (Y_{t_{i+1}}-Y_{t_i})^2 $$
 	
@@ -613,42 +623,149 @@ We implemented both approaches with a very similar set of parameters:
 	$$ \hat{[X,X]_T}^{(adj)} = \Big(1 - \frac{\bar n}{n}\Big)^{-1} \hat{[X,X]_T}   $$
 	
 	\subsubsection{Alternative approaches}
-	Instead of using the model-free estimator from Zhang, Mykland and Ait-Sahalia, we could use instead the following estimators, which can be found in Bennett \& Gil (2012) [7].
+	Instead of using the model-free estimator from Zhang, Mykland and Ait-Sahalia, we could use instead the following estimators, which can be found in Bennett \& Gil (2012) [7]. The goal of all of these models detailed in [7] is to solve the shortcomings of the naive approach in order to have a volatility estimation that reflects more closely the reality of financial market microstructure. Those issues are :
+    
+    \vspace{3mm}
+    
+\begin{itemize}
+\item Intra-Trading period Information
+\item Non-Zero Drift
+\item Jumps
+\end{itemize}
+
+ \vspace{3mm}
+
+\textbf{a. Parkinson Estimator}: the issue with the usual way to calculate volatility is that we only take the Close-to-close price. Thus the estimator does not really capture the information of the price moves during the day. To correct this drawback, Parkinson used the High(H) and Low(L) prices for each period of computation. It allows to better capture the moves during the period of computation.
+
+
+$$ \sigma_{Park} = \sqrt{\frac{F}{N}} \sqrt{\frac{1}{4\ln(2)}\sum_{i=1}^{N} \Big[\ln(\frac{h_i}{l_i})\Big]^2} $$
+
+ \vspace{3mm}
+
+\textbf{b. Garman-Klass estimator}: there are different methods of calculating volatility using some or all of the open (O), high (H), low (L) and close (C). The Garman-Klass estimator is an extension of Parkinson which includes opening and closing prices. The limit of the Parkinson estimator is that even if it takes into account the variation within a trading period, it does not take into account the Open and the Close whereas there are the moment where the trading volumes are the most intense, thus they are non-negligible (if opening prices are not available the close from the previous day can be used instead).
+
+$$ \sigma_{GK} = \sqrt{\frac{F}{N}} \sqrt{\sum_{i=1}^{N} \Big[\frac{1}{2}[\ln\Big(\frac{h_i}{l_i}\Big)\Big]^2 - (2\ln(2)-1) \Big[\ln(\frac{c_i}{o_i})^2 \Big]} $$
+
+ \vspace{3mm}
+
+\textbf{c. Rogers-Satchell Estimator}: all the previous models tried to provide a consistent solution to estimate the volatility. However, they all assumed a zero-drift on average. They assumed there was no trend for the price path. Usually, for option pricing, we use a Geometric Brownian motion with a drift to model the stock price path. Consequently, it is a flaw that has to be fixed. Rogers Satchell tried to solve this issue by using the product of the log fraction of both high and low over the open and the close. Then, they take the difference of both. However, it underestimates volatility as it does not take jumps into account.
+
+$$ \sigma_{RS} = \sqrt{\frac{F}{N}} \sqrt{\sum_{i=1}^{N} \Big[ln\Big(\frac{h_i}{c_i}\Big)\ln\Big(\frac{h_i}{o_i}\Big) + \ln\Big(\frac{l_i}{c_i}\Big)ln\Big(\frac{l_i}{o_i}\Big)  \Big]} $$
+
+ \vspace{3mm}
+
+\textbf{d. Garman-Klass Estimator with Yang-Zang Extension}: one of the main drawbacks of the estimators previously introduced are that they do not take into account jumps in prices. This involves a downward bias, because volatility is underestimated. Yang Zang tried to provide an extension to the Garman-Klass estimator so that jumps are handled. The most common jumps come from the change between closing and opening. To take it into account, they simply add another commponent to the Garman-Klass model which is the squared log fraction between the closing of the previous day and the opening today. This will result in an estimation which is always greater than the Garman-Klass one unless closing and opening are equals through the whole trading period.
+
+$$ \sigma_{GKYZ} = \sqrt{\frac{F}{N}} \sqrt{\sum_{i=1}^{N} \Big(\Big[\ln\Big(\frac{o_i}{c_{i-1}}\Big)\Big]^2+\frac{1}{2}\Big[\ln\Big(\frac{h_i}{l_i}\Big)\Big]^2 - (2\ln(2)-1) \Big[\ln\Big(\frac{c_i}{o_i}\Big)\Big]^2 \Big)} $$
+
+\vspace{3mm}
+
+	\subsection{Implementation on market data}
 	
-	\begin{itemize}
-	\item Garman-Klass: AAA
-	\item Garman-Klass-Yang-Zang: AAA
-	\item Parkinson: AAA
-	\item Rogers-Satchell: AAA
-	\end{itemize}
-		
-	\subsection{Calibration of volatility estimators on market data}
+    We implement our volatility estimators on intraday market data (sampling frequencies are 1 minute, 5 minutes and 10 minutes) of Total SA extracted on Bloomberg, from March 1st 2018 to April 13th 2018.
+    
+    \vspace{2mm}
+    
+            \begin{center}
+     \includegraphics[width=15cm,scale=0.5]{vol1min.png}\label{Fig101}
+     \end{center}
+     
+          \begin{center}
+     \includegraphics[width=15cm,scale=0.5]{vol5min.png}\label{Fig102}
+     \end{center}
+     
+          \begin{center}
+     \includegraphics[width=15cm,scale=1.2]{vol10min.png}\label{Fig103}
+     \\ \title{Figure 12: Volatility estimators on intraday market data from Total SA}
+     \end{center}
+    
+    \vspace{3mm}
 	
-	AAA
-	
+    We start by looking at 1 minute intraday data. From there, we can categorize the estimators into 3 categories:
+    
+        \begin{itemize}
+	\item \textbf{Highest estimation of volatility}: Garman-Klass-Yang-Zang. This is due to the added term that involves a clear upward bias.
+	\item \textbf{Overreaction to jumps}: Naive volatility. The naive volatility approach overreacts to the jumps which creates an unsmoothness in the estimator
+    \item \textbf{Stable/Downward biased estimators}: Parkinson, Rogers-Satchell, Garman-Klass and ZMA got quite similar values even if ZMA is always on the lower bound and Parkinson on the upper bound.
+	\end{itemize}  
+ 
+We have two extreme cases:
+
+      \begin{itemize}
+	\item First, there is the Garman-Klass-Yang-Zang estimator. It seems to overestimate volatility. However, the strength of this model is that it takes into account jumps in a smooth way which allows to have less variance in volatility estimation compared to the naive estimator. Nonetheless, we may question the use of the jump parameter during all the trading period as it triggers a clear upward bias.
+    \item For the stable estimators, we observe few differences among the estimates. It is because there are not, or at least much less, sensitive to jumps. This lack of sensitivity seems to be one of the root cause for this underestimation. Then, it is really interesting to notice that Garman-Klass and Rogers-Satchell yield almost the same values during the whole period. This is certainly due to the fact that they both use differences of product of log fractions. As for ZMA, it seems to be always on the lower bound as it basically smooth the Naive Volatility, then subtracts the value of the Naive Volatility from the smoothed estimation. We can notice that for small values of $K$, it almost matches the other stable estimators. Parkinson is always on the upper bound because it only takes the log fraction of high over low, hence some precious information is missing.
+	\end{itemize}  
+
+If we switch to 5 minute intraday day, the results confirms our analysis on the 1 minute data. As the data is smoother, some facts are more obvious:
+
+      \begin{itemize}
+	\item It is clear that Garman-Klass-Yang-Zang is over sensitive to jumps which creates a very important variance of the estimator. The gap between Garman-Klass-Yang-Zang seems to almost double in periods of jumps.
+    \item ZMA is still on the lower bound of the downward biased estimators. We can notice clearly that is not sensitive to jumps.
+    \item Parkinson, Garman-Klass and Rogers-Satchell estimators seem to have even closer results, which means that with smoothed data, the impact of the adjustment made are minimal.
+    \item Naive volatility is less smoother and matches Parkinson, Garman-Klass and Rogers-Satchell in periods with no jumps.
+	\end{itemize}  
+
+Finally, when we switch to 10 minute intraday data, our previous analysis is further confirmed: first, naive volatility matches Parkinson, Garman-Klass and Rogers-Satchell which are really close to each other. ZMA is still on the lower bound but seems to be more sensitive to jumps than with higher frequency data. Finally, this graph does not add new insight on the Garman-Klass-Yang-Zang estimator
+
 	\subsection{Integrating dynamic volatility into Almgren-Chriss}
 	
-	AAA
+	\subsubsection{Nonlinear programming}
 	
+	We wanted to stress-test the AC algorithm when it faces different volatilities. Using the volatility estimators defined previously we tested the quadratic optimization with these volatilities for different benchmarks (TWAP, VWAP and IS) and different frequencies (1 min., 5 min., 10 min.). Our intuition was that the volatility should impact the trading trajectory.
+    
+   \vspace{3mm} 
+    
+     \begin{center}
+     \includegraphics[width=16cm,scale=0.8]{volEF.png}\label{Fig103}
+     \\ \title{Figure 13: Dynamic volatility and nonlinear optimization}
+     \end{center}
+     
+     \vspace{3mm}
+     
+As you can see on the graph above, for a frequency of 1 min., the use of a different volatility estimator does not seem to change anything. It remains true for other frequencies. For market practitioners this means that they can use a naive volatility and do not need to take care of this. This might be less true in a continuous time framework with bid, asks and market depth.
+    
+    \subsubsection{Dynamic programming}
+	
+    Finally, we run the same volatility estimators on the dynamic programming implementation of Almgren-Chriss. For this set of rolling window volatility estimators applied on Total SA, we found that it had little impact on the liquidation. This is most likely because our volatility parameter in the Bellman equation only seems to respond to large changes in $\sigma$. Thus the benefits of including dynamic volatility in the liquidation algorithm clearly dependents on the choice of parameters for $\psi$, $\gamma$, $\eta$ and $X$ which adds even further complexity to the implementation.
+    
 	\section{Conclusion}
 	
-	The Almgren-Chriss model has become the canonical reference for the optimal execution research. This is mainly due to the following reasons:
+	The Almgren-Chriss model has become the canonical reference for optimal execution research. This is mainly due to the following reasons:
 	
     \begin{itemize}
-	\item Allows one to graphically represent the trade-off between slow execution with low transaction costs but high timing risk, versus a faster execution with lower exposure to future price fluctuations but high transaction costs;
+	\item Allows one to graphically represent the trade-off between slow execution with low transaction costs but high timing risk, versus a faster execution with lower exposure to future price fluctuations but higher transaction costs;
 	\item Ease to choose one's own preferred approach to model market impact costs: while we used linear market impact functions, it is possible to use more complex market impact functions that take into market phenomenology. Their integration into Almgren-Chriss is seamless;
-	\item Avoids the temptation of modelling the market as a physical system fully enclosed in its own data (which is a commonly refered as \textit{physics envy})
-	\item Designed from a bottom-top approach: the Almgren-Chriss model was not built in the same way as traditional mathematic models in economics. The framework is at first a simplistic modeling of the execution process, but its flexibility allows for numerous enhancements;
-    \item Provides a multitude of modelling approaches to compute the slow/fast execution trade-off (e.g. KKT nonlinear optimization, dynamic programming, stochastic control, reinforcement learning, etc.).
+	\item Avoids the temptation of modeling the market as a physical system fully enclosed in its own data (which is commonly referred to as \textit{physics envy});
+	\item Designed from a bottom-top approach: the Almgren-Chriss model was not built in the same way as traditional models in mathematical economics or finance. The framework is at first a simplistic modeling of the execution process, but its flexibility allows for numerous enhancements;
+    \item Provides a multitude of modeling approaches to compute the slow or fast execution trade-off: e.g. nonlinear optimization, dynamic programming, stochastic control, reinforcement learning, etc.
 	\end{itemize}
 	
     \vspace{3mm}
     
-	[COMMENT ON RESULTS]
+	Through our paper, we have done the following:
+    
+    \begin{itemize}
+	\item Computed the efficient frontiers and optimal liquidation curves (with nonlinear programming) for the implementation shortfall, VWAP and TWAP algorithms. Our results were consistent with the original paper by Almgren-Chriss and research literature;
+	\item Implemented a simplified version of the Bellman equation for solving the Almgren-Chriss model;
+    \item Implemented numerous volatility estimators that take into account microstructure biases and integrated them into both the nonlinear and dynamic programming approaches.
+	\end{itemize}    
+    
     
     \vspace{3mm}
+    Our main results are the following:
+    \begin{itemize}
+    \item The IS benchmark is much more sensitive to the risk aversion factor than VWAP and TWAP benchmarks;
+    \item Using different volatility measures does not impact the trading trajectories of the three benchmarks.
+    \end{itemize}
     
-    [PISTES DE RECHERCHE]
+    \vspace{3mm}
+    Possible future avenues of research:
+    
+    \begin{itemize}
+	\item Implement stochastic control methods (ex. Hamilton-Jacobi-Bellman equation and nonlinear PDEs) for solving the Almgren-Chriss framework;
+    \item Implement reinforcement learning algorithms such as Q-Learning. This will necessitate market data from order books (ex. Robinson-Monroe algorithm);
+    \item Trading algorithms for limit orders instead of market orders: implementing variants of dynamic programming which include the simplified Bellman equation applied to limit orders or the Avellaneda-Stoikov market making model.
+	\end{itemize}    
 	
     \newpage
     
@@ -665,7 +782,7 @@ We implemented both approaches with a very similar set of parameters:
 		\bibitem{doc3} 
 		R. Almgren, C. Thum, E. Hauptmann, H. Li. Direct estimation of equity market impact.
 		\textit{Risk},
-		18(7):58–62, 2005.
+		18(7):58?62, 2005.
 		
 		\bibitem{doc4} 
 		O. Gueant,
